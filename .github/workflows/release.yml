@@ -1,0 +1,56 @@
+# Bygger en binær pr. platform med Bun, når et tag som v1.2.3 pushes, og
+# lægger dem sammen med thehome.json på en GitHub-release. TheHome
+# installerer derfra.
+#
+# Linux bruger Buns glibc-udgaver: Buns musl-udgaver kræver musl-loaderen,
+# som TheHomes Debian-image ikke har. x64 bruger "baseline", så binæren
+# også kører på ældre CPU'er uden AVX2.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # domænet fra thehome.json
+  DOMAIN: example_counter_node
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - name: Kompilér
+        run: |
+          mkdir dist
+          build() { bun build --compile --minify --target="$1" src/main.js --outfile "dist/$DOMAIN-$2"; }
+          build bun-windows-x64-baseline x86_64-pc-windows-msvc.exe
+          build bun-linux-x64-baseline   x86_64-unknown-linux-gnu
+          build bun-linux-arm64          aarch64-unknown-linux-gnu
+          build bun-darwin-arm64         aarch64-apple-darwin
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/*
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: dist
+      - run: gh release create "$GITHUB_REF_NAME" dist/* thehome.json --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

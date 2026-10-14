@@ -1,0 +1,8 @@
+{
+  "domain": "example_counter_node",
+  "name": "Eksempel-tæller (Node)",
+  "plugin_api": 1,
+  "config_flow": true,
+  "iot_class": "calculated",
+  "documentation": "https://github.com/magnusdunker/thehome-example-integration-node"
+}
