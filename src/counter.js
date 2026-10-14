@@ -15,15 +15,19 @@ import { flow, log, PluginError } from '../sdk/thehome-plugin.js';
 
 const DOMAIN = 'example_counter_node';
 const VERSION = '0.1.0';
+/** Hvor tit tællerens stand skrives i TheHomes log (ms). */
+const LOG_EVERY = 10_000;
 
 /**
  * @typedef {object} Counter
+ * @property {string} name
  * @property {number} count
  * @property {boolean} running
  * @property {string | null} countId
  * @property {string | null} runningId
  * @property {string | null} resetId
  * @property {ReturnType<typeof setInterval> | null} timer
+ * @property {ReturnType<typeof setInterval> | null} logTimer
  */
 
 /** @type {Map<string, Counter>} entry_id -> tæller */
@@ -158,7 +162,7 @@ export const integration = {
 
     const count = load(host, id);
     /** @type {Counter} */
-    const c = { count, running: true, countId, runningId, resetId, timer: null };
+    const c = { name, count, running: true, countId, runningId, resetId, timer: null, logTimer: null };
     counters.set(id, c);
     if (resetId) await host.setState(resetId, 'unknown');
     await publish(host, id);
@@ -171,12 +175,16 @@ export const integration = {
         host.setState(c.countId, c.count).catch((e) => log('WARN', `kunne ikke opdatere ${c.countId}: ${e.message}`));
       }
     }, interval * 1000);
+    c.logTimer = setInterval(() => {
+      log('INFO', `${c.name}: tælleren står på ${c.count} (${c.running ? 'kører' : 'pause'})`);
+    }, LOG_EVERY);
     log('INFO', `${name} tæller hvert ${interval}. sekund fra ${count}`);
   },
 
   async unloadEntry(host, entryId) {
     const c = counters.get(entryId);
     if (c?.timer) clearInterval(c.timer);
+    if (c?.logTimer) clearInterval(c.logTimer);
     counters.delete(entryId);
     // TheHome fjerner tjenesten med opsætningen; de andre skal stadig have den
     const other = counters.keys().next().value;
