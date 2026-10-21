@@ -1,4 +1,4 @@
-// Kører integrationen som et rigtigt program og spiller TheHome over stdin og stdout.
+// Kører integrationen som et rigtigt program og spiller HomewrightHQ over stdin og stdout.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { intervalOf } from '../src/counter.js';
 
-/** En falsk TheHome: svarer på integrationens kald og husker tilstande. */
+/** En falsk HomewrightHQ: svarer på integrationens kald og husker tilstande. */
 function fakeHost(dataDir) {
   const child = spawn(process.execPath, ['src/main.js'], { stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, THEHOME_DATA_DIR: dataDir } });
   const states = new Map();

@@ -1,7 +1,7 @@
 {
   "name": "thehome-example-counter-node",
   "version": "0.1.0",
-  "description": "Eksempel på en ekstern integration til TheHome i Node: en tæller",
+  "description": "Eksempel på en ekstern integration til HomewrightHQ i Node: en tæller",
   "license": "MIT",
   "private": true,
   "type": "module",

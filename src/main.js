@@ -1,4 +1,4 @@
-// Programmets indgang: kør integrationen mod TheHome på stdin og stdout.
+// Programmets indgang: kør integrationen mod HomewrightHQ på stdin og stdout.
 import { run } from '../sdk/thehome-plugin.js';
 import { integration } from './counter.js';
 

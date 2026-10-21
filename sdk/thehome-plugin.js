@@ -1,6 +1,6 @@
-// SDK til eksterne TheHome-integrationer i JavaScript.
+// SDK til eksterne HomewrightHQ-integrationer i JavaScript.
 //
-// En ekstern integration er et selvstændigt program. TheHome starter det og
+// En ekstern integration er et selvstændigt program. HomewrightHQ starter det og
 // taler med det over JSON-RPC 2.0 på stdin og stdout, én besked pr. linje.
 // stderr er integrationens log. Programmet stopper, når stdin lukkes.
 //
@@ -23,7 +23,7 @@ export const API_VERSION = 1;
 const HOST_TIMEOUT_MS = 30_000;
 
 /**
- * En fejl til TheHome. `kind` afgør, hvad TheHome gør: `not_ready` prøver
+ * En fejl til HomewrightHQ. `kind` afgør, hvad HomewrightHQ gør: `not_ready` prøver
  * igen senere, `auth_failed` beder brugeren logge ind igen,
  * `invalid_argument`, `not_supported`, `unavailable` og `not_found` vises ved
  * tjenestekald, og `failed` er alt andet.
@@ -42,7 +42,7 @@ export class PluginError extends Error {
   static unavailable(m) { return new PluginError('unavailable', m); }
 }
 
-/** Skriv til TheHomes log. `level`: `ERROR`, `WARN`, `INFO` eller `DEBUG`. */
+/** Skriv til HomewrightHQ's log. `level`: `ERROR`, `WARN`, `INFO` eller `DEBUG`. */
 export function log(level, message) {
   process.stderr.write(`${level} ${message}\n`);
 }
@@ -91,7 +91,7 @@ export const flow = {
   abort: (reason) => ({ result: { type: 'abort', reason } }),
 };
 
-/** Forbindelsen til TheHome. */
+/** Forbindelsen til HomewrightHQ. */
 export class Host {
   #send;
   #pending = new Map();
@@ -103,13 +103,13 @@ export class Host {
     this.#send = send;
   }
 
-  /** Kald en metode i TheHome og vent på svaret. */
+  /** Kald en metode i HomewrightHQ og vent på svaret. */
   request(method, params = {}) {
     const id = this.#nextId++;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.#pending.delete(id);
-        reject(PluginError.failed(`${method}: TheHome svarede ikke`));
+        reject(PluginError.failed(`${method}: HomewrightHQ svarede ikke`));
       }, HOST_TIMEOUT_MS);
       this.#pending.set(id, { resolve, reject, timer });
       this.#send({ jsonrpc: '2.0', id, method, params });
@@ -130,7 +130,7 @@ export class Host {
   _close() {
     for (const p of this.#pending.values()) {
       clearTimeout(p.timer);
-      p.reject(PluginError.notReady('forbindelsen til TheHome er lukket'));
+      p.reject(PluginError.notReady('forbindelsen til HomewrightHQ er lukket'));
     }
     this.#pending.clear();
   }
@@ -142,7 +142,7 @@ export class Host {
   }
 
   /**
-   * Tilføj en entity. Med `handler` sender TheHome dens tjenestekald til
+   * Tilføj en entity. Med `handler` sender HomewrightHQ dens tjenestekald til
    * `entityService`. Returnerer entity_id, eller `null` hvis brugeren har slået den fra.
    */
   async addEntity(entryId, entity, handler = false) {
@@ -168,7 +168,7 @@ export class Host {
     await this.request('service/register', { entry_id: entryId, service, description });
   }
 
-  /** Kald en tjeneste i TheHome, f.eks. `light.turn_on`. */
+  /** Kald en tjeneste i HomewrightHQ, f.eks. `light.turn_on`. */
   callService(domain, service, data = {}) {
     return this.request('hub/call_service', { domain, service, data });
   }
@@ -198,7 +198,7 @@ function toWire(e) {
 }
 
 /**
- * Håndtér én besked fra TheHome. Eksporteret til test.
+ * Håndtér én besked fra HomewrightHQ. Eksporteret til test.
  * @param {Integration} integration
  * @param {Host} host
  */
@@ -237,7 +237,7 @@ export async function handle(integration, host, method, p = {}) {
 }
 
 /**
- * Kør integrationen, indtil TheHome lukker stdin eller beder om at stoppe.
+ * Kør integrationen, indtil HomewrightHQ lukker stdin eller beder om at stoppe.
  * @param {Integration} integration
  */
 export function run(integration) {
@@ -256,7 +256,7 @@ export function run(integration) {
     try {
       msg = JSON.parse(line);
     } catch {
-      log('WARN', `ugyldig besked fra TheHome: ${line}`);
+      log('WARN', `ugyldig besked fra HomewrightHQ: ${line}`);
       return;
     }
     if (typeof msg.method !== 'string') {
@@ -268,7 +268,7 @@ export function run(integration) {
       return;
     }
     const id = msg.id ?? null;
-    // Hver besked håndteres for sig, så integrationen kan kalde TheHome imens.
+    // Hver besked håndteres for sig, så integrationen kan kalde HomewrightHQ imens.
     handle(integration, host, msg.method, msg.params ?? {}).then(
       (result) => id !== null && send({ jsonrpc: '2.0', id, result }),
       (err) => {

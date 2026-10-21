@@ -1,9 +1,9 @@
 # Bygger en binær pr. platform med Bun, når et tag som v1.2.3 pushes, og
-# lægger dem sammen med thehome.json på en GitHub-release. TheHome
+# lægger dem sammen med thehome.json på en GitHub-release. HomewrightHQ
 # installerer derfra.
 #
 # Linux bruger Buns glibc-udgaver: Buns musl-udgaver kræver musl-loaderen,
-# som TheHomes Debian-image ikke har. x64 bruger "baseline", så binæren
+# som HomewrightHQ's Debian-image ikke har. x64 bruger "baseline", så binæren
 # også kører på ældre CPU'er uden AVX2.
 name: Release
 

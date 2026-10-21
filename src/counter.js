@@ -1,4 +1,4 @@
-// Eksempel-tæller (Node): en ekstern integration til TheHome.
+// Eksempel-tæller (Node): en ekstern integration til HomewrightHQ.
 //
 // Hver opsætning får en enhed med
 // - en sensor, der tæller én op med et fast interval,
@@ -15,7 +15,7 @@ import { flow, log, PluginError } from '../sdk/thehome-plugin.js';
 
 const DOMAIN = 'example_counter_node';
 const VERSION = '0.1.0';
-/** Hvor tit tællerens stand skrives i TheHomes log (ms). */
+/** Hvor tit tællerens stand skrives i HomewrightHQ's log (ms). */
 const LOG_EVERY = 10_000;
 
 /**
@@ -79,7 +79,7 @@ function save(host, entryId, count) {
   }
 }
 
-/** Send tællerens og kontaktens tilstand til TheHome. */
+/** Send tællerens og kontaktens tilstand til HomewrightHQ. */
 async function publish(host, entryId) {
   const c = counters.get(entryId);
   if (!c) return;
@@ -105,7 +105,7 @@ async function reset(host, entryId) {
 
 /**
  * `example_counter_node.set` gælder alle opsætninger; målet afgør hvilken.
- * TheHome knytter tjenesten til den opsætning, der registrerede den.
+ * HomewrightHQ knytter tjenesten til den opsætning, der registrerede den.
  */
 async function registerSetService(host, entryId) {
   await host.registerService(entryId, 'set', {
@@ -144,7 +144,7 @@ export const integration = {
     const device = await host.registerDevice(id, {
       identifiers: [[DOMAIN, id]],
       name,
-      manufacturer: 'TheHome',
+      manufacturer: 'HomewrightHQ',
       model: 'Eksempel-tæller (Node)',
       sw_version: VERSION,
     });
@@ -186,7 +186,7 @@ export const integration = {
     if (c?.timer) clearInterval(c.timer);
     if (c?.logTimer) clearInterval(c.logTimer);
     counters.delete(entryId);
-    // TheHome fjerner tjenesten med opsætningen; de andre skal stadig have den
+    // HomewrightHQ fjerner tjenesten med opsætningen; de andre skal stadig have den
     const other = counters.keys().next().value;
     if (other) await registerSetService(host, other);
   },
