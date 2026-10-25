@@ -1,58 +1,58 @@
-# Eksempel-tæller (Node) til HomewrightHQ
+# Example counter (Node) for HomewrightHQ
 
-En lille ekstern integration til [HomewrightHQ](https://github.com/magnusdunker/homewrighthq), skrevet i JavaScript. Den gør det samme som [Rust-eksemplet](https://github.com/magnusdunker/thehome-example-integration) og er til at afprøve integrationer fra GitHub, eller som udgangspunkt for at skrive sin egen i Node.
+A small external integration for [HomewrightHQ](https://github.com/magnusdunker/homewrighthq), written in JavaScript. It does the same as the [Rust example](https://github.com/magnusdunker/thehome-example-integration) and is for trying out integrations from GitHub, or as a starting point for writing your own in Node.
 
-Hver opsætning giver en enhed med:
+Each setup creates a device with:
 
-- en sensor, **Antal**, der tæller én op med et fast interval
-- en kontakt, **Tæller**, der sætter tællingen på pause
-- en knap, **Nulstil**, der sætter tallet til 0 og sender hændelsen `example_counter_node_reset`
+- a sensor, **Antal** (count), that counts up by one at a fixed interval
+- a switch, **Tæller** (counter), that pauses the counting
+- a button, **Nulstil** (reset), that sets the number to 0 and fires the event `example_counter_node_reset`
 
-Desuden har den tjenesten `example_counter_node.set`, der sætter en tæller til en bestemt værdi, og et options-forløb, hvor intervallet kan ændres. Tallet gemmes i integrationens datamappe, så det overlever en genstart.
+It also has the service `example_counter_node.set`, which sets a counter to a given value, and an options flow where you can change the interval. The number is stored in the integration's data folder, so it survives a restart.
 
 ## Installation
 
-I HomewrightHQ: **Indstillinger → Integrationer → Fra GitHub**. Indsæt
+In HomewrightHQ: **Settings → Integrations → From GitHub**. Paste
 
 ```
 https://github.com/magnusdunker/homewrighthq-example-integration-node
 ```
 
-og tryk **Installér**. Tilføj derefter **Eksempel-tæller (Node)** under **Tilføj integration**.
+and press **Install**. Then add **Eksempel-tæller (Node)** under **Add integration**.
 
-Brugeren skal ikke have Node installeret. Releasen indeholder færdige programmer, hvor Node-runtimen er bygget ind.
+The user does not need Node installed. The release contains ready-made programs with the Node runtime built in.
 
-## Sådan virker det
+## How it works
 
-En ekstern integration er et selvstændigt program. HomewrightHQ starter det og taler med det over JSON-RPC på stdin og stdout. Protokollen er beskrevet i HomewrightHQ's [docs/custom-integrations.md](https://github.com/magnusdunker/homewrighthq/blob/main/docs/custom-integrations.md).
+An external integration is a standalone program. HomewrightHQ starts it and talks to it over JSON-RPC on stdin and stdout. The protocol is described in HomewrightHQ's [docs/custom-integrations.md](https://github.com/magnusdunker/homewrighthq/blob/main/docs/custom-integrations.md).
 
-Repoet indeholder:
+The repo contains:
 
-- `thehome.json`: domæne, navn og protokolversion
-- `sdk/thehome-plugin.js`: protokollen i ét modul uden afhængigheder
-- `src/counter.js`: selve integrationen
-- `src/main.js`: programmets indgang
-- `test/`: tests, der kører programmet og spiller HomewrightHQ
-- `.github/workflows/release.yml`: bygger programmerne og lægger dem på en release
+- `thehome.json`: domain, name and protocol version
+- `sdk/thehome-plugin.js`: the protocol in one module with no dependencies
+- `src/counter.js`: the integration itself
+- `src/main.js`: the program's entry point
+- `test/`: tests that run the program and play the part of HomewrightHQ
+- `.github/workflows/release.yml`: builds the programs and puts them on a release
 
-HomewrightHQ kræver i dag ét program pr. platform. Workflowet bruger `bun build --compile` til at pakke koden og en JavaScript-runtime sammen i én fil til Windows, Linux (x64 og arm64) og macOS. Hver fil fylder 70-95 MB, fordi runtimen er med. Koden bruger kun Nodes standardmoduler, så den kører både med Node og Bun.
+HomewrightHQ currently requires one program per platform. The workflow uses `bun build --compile` to pack the code and a JavaScript runtime into one file for Windows, Linux (x64 and arm64) and macOS. Each file is 70-95 MB, because the runtime is included. The code uses only Node's standard modules, so it runs with both Node and Bun.
 
-## Lav din egen
+## Make your own
 
-1. Kopiér repoet og ret `domain` og `name` i `thehome.json`. Domænet må kun indeholde små bogstaver, tal og `_` og må ikke være en indbygget integrations domæne.
-2. Ret `DOMAIN` øverst i `release.yml`.
-3. Skriv integrationen som et objekt med `setupEntry` og de andre metoder, du har brug for, og kald `run()` fra `sdk/thehome-plugin.js`. Typerne står som JSDoc i SDK'en.
-4. Afhængigheder fra npm er fine. `bun build --compile` bundler dem ind i programmet.
-5. Push et tag, f.eks. `git tag v0.1.0 && git push --tags`. Workflowet bygger og opretter releasen.
+1. Copy the repo and change `domain` and `name` in `thehome.json`. The domain may only contain lowercase letters, digits and `_`, and must not be the domain of a built-in integration.
+2. Change `DOMAIN` at the top of `release.yml`.
+3. Write the integration as an object with `setupEntry` and the other methods you need, and call `run()` from `sdk/thehome-plugin.js`. The types are documented as JSDoc in the SDK.
+4. Dependencies from npm are fine. `bun build --compile` bundles them into the program.
+5. Push a tag, e.g. `git tag v0.1.0 && git push --tags`. The workflow builds and creates the release.
 
-HomewrightHQ henter altid den nyeste release. Programmerne skal hedde `<domæne>-<target>`, f.eks. `example_counter_node-aarch64-unknown-linux-gnu`.
+HomewrightHQ always fetches the newest release. The programs must be named `<domain>-<target>`, e.g. `example_counter_node-aarch64-unknown-linux-gnu`.
 
 ```sh
-npm test          # kører testene med Node
-npm start         # starter programmet; det venter på beskeder fra HomewrightHQ på stdin
+npm test          # runs the tests with Node
+npm start         # starts the program; it waits for messages from HomewrightHQ on stdin
 npx bun build --compile src/main.js --outfile dist/example_counter_node
 ```
 
-## Licens
+## License
 
 MIT
